@@ -1,0 +1,49 @@
+/* src/components/ConditionList.css */
+
+/* Container for the entire component */
+.condition-list-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* Center-aligns the content horizontally */
+  padding: 20px; /* Adds padding around the container */
+  background-color: #f9f9f9; /* Optional: Adds a background color */
+}
+
+/* Style for the heading */
+.condition-list-container h1 {
+  text-align: center; /* Center-aligns the heading text */
+  margin-bottom: 20px; /* Adds space below the heading */
+  font-size: 24px; /* Adjust font size as needed */
+  color: #333; /* Optional: Sets a color for the heading */
+}
+
+/* Style for buttons */
+.button {
+  display: inline-block; /* Ensures buttons are aligned inline */
+  margin: 10px; /* Adds space between buttons */
+  padding: 10px 20px; /* Adds padding inside buttons */
+  font-size: 16px; /* Sets font size for buttons */
+  border: none; /* Removes default border */
+  border-radius: 5px; /* Rounds the corners of buttons */
+  background-color: #007bff; /* Sets a background color */
+  color: white; /* Sets text color */
+  cursor: pointer; /* Changes cursor to pointer on hover */
+  transition: background-color 0.3s; /* Smooth transition for background color */
+}
+
+.button:hover {
+  background-color: #0056b3; /* Changes background color on hover */
+}
+
+/* Style for error and success messages */
+.error-message {
+  color: red;
+  font-size: 14px;
+  margin-top: 10px;
+}
+
+.success-message {
+  color: green;
+  font-size: 14px;
+  margin-top: 10px;
+}

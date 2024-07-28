@@ -1,0 +1,26 @@
+/* src/components/ConditionRow.css */
+
+/* Form row styles */
+.condition-row {
+  display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.condition-row select,
+.condition-row input {
+  margin: 0 10px;
+  padding: 8px;
+  border: 1px solid #ced4da;
+  border-radius: 4px;
+  font-size: 16px;
+}
+
+.condition-row input {
+  flex: 1;
+}
+
+.condition-row select {
+  flex: 1;
+  max-width: 150px;
+}
