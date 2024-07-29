@@ -7,17 +7,17 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
   const [textBoxValue, setTextBoxValue] = useState(prefill?.Condition || "");
   const [secondDropdown, setSecondDropdown] = useState(prefill?.Activity || "");
 
-  const parameters1 = ["Name", "Age", "Gender", "Pincode"];
-  const parameters2 = ["Name", "Age", "Gender", "Pincode", "Loan Status"];
+  const parameters1 = ["Name", "AgeCheck", "GenderCheck", "PincodeCheck"];
+  const parameters2 = ["Name", "AgeCheck", "GenderCheck", "PincodeCheck", "LoanStatus"];
 
   const validateTextBoxValue = () => {
     if (firstDropdown === "Name") {
       return /^[A-Za-z]+$/.test(textBoxValue);
-    } else if (firstDropdown === "Age") {
+    } else if (firstDropdown === "AgeCheck") {
       return /^(lesser|greater) than \d+$/.test(textBoxValue);
-    } else if (firstDropdown === "Gender") {
+    } else if (firstDropdown === "GenderCheck") {
       return ["male", "female"].includes(textBoxValue.toLowerCase());
-    } else if (firstDropdown === "Pincode") {
+    } else if (firstDropdown === "PincodeCheck") {
       // Allow pincode to be exactly 6 digits or start with 2 digits followed by more digits, with total length >= 6
       return /^\d{2}\d*$/.test(textBoxValue) || /^\d{6}$/.test(textBoxValue);
     }
@@ -35,9 +35,9 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
   }, [firstDropdown, textBoxValue, secondDropdown, index]);
 
   const getPlaceholder = () => {
-    if (firstDropdown === "Age") return "lesser/greater than age";
-    if (firstDropdown === "Gender") return "male or female";
-    if (firstDropdown === "Pincode") return "6-digit PIN code or Start with XX";
+    if (firstDropdown === "AgeCheck") return "lesser/greater than age";
+    if (firstDropdown === "GenderCheck") return "male or female";
+    if (firstDropdown === "PincodeCheck") return "6-digit PIN code or Start with XX";
     return "";
   };
 

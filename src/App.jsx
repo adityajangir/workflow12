@@ -12,8 +12,8 @@ function App() {
       <Routes>
         <Route path="/" element={<ConditionList />} />
         <Route path="/view-workflows" element={<ViewWorkflows />} />
-        <Route path="/view-tree/:workflowId" element={<ViewTree />} />
         <Route path="/edit-workflow/:workflowId" element={<EditWorkflow />} /> {/* New route */}
+        <Route path="/view-tree" element={<ViewTree />} />
       </Routes>
     </Router>
   );

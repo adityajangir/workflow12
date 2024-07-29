@@ -14,7 +14,7 @@ const ViewWorkflows = () => {
   useEffect(() => {
     const fetchWorkflows = async () => {
       try {
-        const response = await axios.get('/api/get-workflows');
+        const response = await axios.get("http://localhost:8080/workflows");
         setWorkflows(response.data);
       } catch (error) {
         setError('Error fetching workflows.');
@@ -30,25 +30,28 @@ const ViewWorkflows = () => {
   const handleSaveJson = async () => {
     try {
       const parsedData = JSON.parse(jsonInput);
-      await axios.post('/api/save-json', { workflowId: selectedWorkflowId, jsonData: parsedData });
+      console.log(parsedData)
+      // const parsedData = jsonInput;
+      const graph = await axios.post(`http://localhost:8080/execution/start/${selectedWorkflowId}`, parsedData);
       setSuccessMessage('JSON data saved successfully!');
       setError('');
-      navigate(`/view-tree/${selectedWorkflowId}`);
+      const serializedData = encodeURIComponent(JSON.stringify(graph));
+      navigate(`/view-tree?data=${serializedData}`);
     } catch (error) {
-      setError('Invalid JSON data or error saving JSON.');
+      setError('Invalid JSON data or error saving JSON.', error);
       setSuccessMessage('');
     }
   };
 
   const handleDeleteWorkflow = async () => {
     try {
-      await axios.delete(`/api/delete-workflow/${selectedWorkflowId}`);
+      await axios.delete(`http://localhost:8080/workflows/${selectedWorkflowId}`);
       setWorkflows(workflows.filter(workflow => workflow.id !== selectedWorkflowId));
       setSelectedWorkflowId('');
       setSuccessMessage('Workflow deleted successfully!');
       setError('');
     } catch (error) {
-      setError('Error deleting workflow.');
+      setError('Error deleting workflow.', error);
       setSuccessMessage('');
     }
   };

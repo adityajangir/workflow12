@@ -1,82 +1,382 @@
-// src/components/ViewTree.jsx
-import React, { useState, useEffect } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
+import ReactFlow, { MiniMap, Controls, Background } from 'react-flow-renderer';
+import { useLocation } from 'react-router-dom';
 import axios from 'axios';
-import ReactFlow, { ReactFlowProvider, addEdge, Background, Controls, MiniMap } from 'reactflow';
-import 'reactflow/dist/style.css';
-import './ViewTree.css';
-
-const ViewTree = ({ match }) => {
-  const [elements, setElements] = useState([]);
-  const [error, setError] = useState('');
+import CustomEdge from './CustomEdge'
+const ViewTree = () => {
+  const [nodes, setNodes] = useState([]);
+  const [edges, setEdges] = useState([]);
+  const reactFlowWrapper = useRef(null);
+  const location = useLocation();
 
   useEffect(() => {
-    const fetchWorkflowJsonData = async () => {
+    const queryParams = new URLSearchParams(location.search);
+    const dataParam = queryParams.get('data');
+    if (dataParam) {
       try {
-        const response = await axios.get(`/api/get-workflow-json/${match.params.workflowId}`);
-        generateElements(response.data.workflow, response.data.jsonData);
+        // Decode and parse the graph data
+        const graphData = JSON.parse(decodeURIComponent(dataParam));
+        const newresp = updateSubtreeValues(graphData);
+        console.log(newresp.data);
+        processGraphData(newresp.data);
       } catch (error) {
-        setError('Error fetching workflow and JSON data.');
+        console.error('Error parsing graph data:', error);
       }
-    };
-    fetchWorkflowJsonData();
-  }, [match.params.workflowId]);
+    }
+  }, [location]);
 
-  const generateElements = (workflow, jsonData) => {
-    const newElements = [];
-    const generateElement = (node, parentId = null) => {
-      const nodeId = `${parentId ? `${parentId}-` : ''}${newElements.length}`;
-      const isSatisfied = jsonData[node.name] !== undefined; // Check if the JSON data satisfies the node
-      newElements.push({
-        id: nodeId,
-        data: { label: node.name || 'Unnamed Node' },
-        position: { x: Math.random() * 250, y: Math.random() * 250 },
-        style: { backgroundColor: isSatisfied ? 'green' : 'grey' }, // Set color based on satisfaction
-      });
-      if (parentId) {
-        newElements.push({
-          id: `e${parentId}-${nodeId}`,
-          source: parentId,
-          target: nodeId,
-        });
+
+  // Function to perform topological sorting and return a map with indices
+  const topologicalSortWithIndex = (graph) => {
+    const visited = new Set();
+    const stack = [];
+    const indexMap = new Map();
+    
+    const visit = (node) => {
+      if (visited.has(node)) return;
+      visited.add(node);
+      if (graph[node]) {
+        Object.keys(graph[node]).forEach((neighbor) => visit(neighbor));
       }
-      if (node.children) {
-        node.children.forEach((child) => generateElement(child, nodeId));
+      stack.push(node);
+    };
+
+    Object.keys(graph).forEach(visit);
+    const sortedNodes = stack.reverse();
+    
+    // Build the index map
+    sortedNodes.forEach((node, index) => {
+      indexMap.set(node, index);
+    });
+
+    return indexMap;
+  };
+
+
+  const updateSubtreeValues = (graph) => {
+    const result = JSON.parse(JSON.stringify(graph)); // Deep copy to avoid mutating the original graph
+  
+    const updateSubtree = (node) => {
+      if (!result[node]) return;
+      
+      // If the node has a number value of 0, update its subtree
+      Object.keys(result[node]).forEach((target) => {
+        const { key } = result[node][target];
+        if (key === 0) {
+          // Update the current node and all nodes in the subtree
+          updateSubtreeRecursive(target);
+        }
+      });
+    };
+  
+    const updateSubtreeRecursive = (node) => {
+      if (!result[node]) return;
+      // Set the number value of the current node to 0
+      Object.keys(result[node]).forEach((target) => {
+        result[node][target].key = 0;
+        updateSubtreeRecursive(target);
+      });
+    };
+  
+    Object.keys(result).forEach(updateSubtree);
+    return result;
+  };
+  
+
+  // useEffect(() => {
+  //   const fetchData = async () => {
+  //     try {
+      //   const response = {
+      //     "GenderCheck": {
+      //         "PincodeCheck": {
+      //             "key": 0,
+      //             "value": "Male"
+      //         },
+      //         "LoanStatus": {
+      //             "key": 2,
+      //             "value": "Female"
+      //         }
+      //     },
+      //     "PincodeCheck": {
+      //         "LoanStatus": {
+      //             "key": 3,
+      //             "value": "Starts with 40"
+      //         }
+      //     },
+      //     "DobCheck": {
+      //         "GenderCheck": {
+      //             "key": 0,
+      //             "value": "age>25"
+      //         }
+      //     }
+      // };
+  //     const response = {
+  //       a: {
+  //         b: {
+  //           key: 1,
+  //           value: "B",
+  //         },
+  //         c: {
+  //           key: 1,
+  //           value: "C",
+  //         },
+  //       },
+  //       b: {
+  //         d: {
+  //           key: 0,
+  //           value: "D",
+  //         },
+  //         e: {
+  //           key: 0,
+  //           value: "E",
+  //         },
+  //       },
+  //       c: {
+  //         f: {
+  //           key: 0,
+  //           value: "F",
+  //         },
+  //         g: {
+  //           key: 1,
+  //           value: "G",
+  //         },
+  //       },
+  //       g: {
+  //         h: {
+  //           key: 2,
+  //           value: "H",
+  //         },
+  //         i: {
+  //           key: 0,
+  //           value: "I",
+  //         },
+  //       },
+  //       i: {
+  //         e: {
+  //           key: 3,
+  //           value: "random"
+  //         }
+  //       }
+  //     };
+
+      
+  //     } catch (error) {
+  //       console.error('Error fetching data:', error);
+  //     }
+  //   };
+
+  //   fetchData();
+  // }, []);
+
+  let ypos = 0, xpos = 1000, xchange = 50, flag = 1;
+
+  const processGraphData = (data) => {
+    const newNodes = [];
+    const newEdges = [];
+    const positions = {};
+    const indexMap = topologicalSortWithIndex(data);
+    console.log(indexMap);
+
+    // Function to calculate position
+    const calculatePosition = (node) => {
+      if (!positions[node]) {
+        const curr = (flag*xchange);
+        positions[node] = { x: xpos+curr, y: 100*indexMap.get(node) };
+        console.log(positions[node]);
+        console.log(xpos, xchange);
+        if(flag == 1) flag = -1;
+        else flag = 1;
+        ypos += 100;
+        xchange += 50;
+      }
+      return positions[node];
+    };
+
+
+    const getEdgeColor = (key) => {
+      switch (key) {
+        case 0:
+          return 'gray';
+        case 1:
+          return 'green';
+        case 2:
+          return 'yellow';
+        case 3:
+          return 'orange';
+        default:
+          return 'black';
       }
     };
-    generateElement(workflow);
-    setElements(newElements);
+
+    Object.keys(data).forEach((source) => {
+      if (!newNodes.find((node) => node.id === source)) {
+        newNodes.push({ id: source, data: { label: source }, position: calculatePosition(source) });
+      }
+      Object.keys(data[source]).forEach((target) => {
+        if (!newNodes.find((node) => node.id === target)) {
+          newNodes.push({ id: target, data: { label: target }, position: calculatePosition(target) });
+        }
+        const { key, value } = data[source][target];
+        console.log(key);
+        newEdges.push({
+          id: `e${source}-${target}`,
+          source,
+          target,
+          type: CustomEdge,
+          label: value,
+          markerEnd: {
+            type: 'arrow',
+          },
+          style: { stroke: getEdgeColor(key) }, // Coloring based on key
+        });
+      });
+    });
+
+    setNodes(newNodes);
+    setEdges(newEdges);
   };
 
   return (
-    <div className="view-tree-container">
-      <h1>Workflow Tree</h1>
-      {error && <div className="error-message">{error}</div>}
-      <div className="react-flow-wrapper" style={{ height: '80vh', width: '100%' }}>
-        <ReactFlowProvider>
-          <ReactFlow
-            elements={elements}
-            style={{ width: '100%', height: '100%' }}
-            snapToGrid={true}
-            snapGrid={[15, 15]}
-            onConnect={(params) => setElements((els) => addEdge(params, els))}
-          >
-            <Background color="#aaa" gap={16} />
-            <Controls />
-            <MiniMap nodeColor={(node) => {
-              switch (node.type) {
-                case 'input':
-                  return 'blue';
-                case 'output':
-                  return 'green';
-                default:
-                  return '#00ff00';
-              }
-            }} />
-          </ReactFlow>
-        </ReactFlowProvider>
-      </div>
+    <div style={{ height: '100vh' }} ref={reactFlowWrapper}>
+      <ReactFlow nodes={nodes} edges={edges} fitView>
+        <MiniMap />
+        <Controls />
+        <Background />
+      </ReactFlow>
     </div>
   );
 };
 
 export default ViewTree;
+
+
+
+
+// import React, { useEffect, useState, useRef } from 'react';
+// import ReactFlow, { MiniMap, Controls, Background, ReactFlowProvider } from 'react-flow-renderer';
+// import axios from 'axios';
+// import CustomEdge from './CustomEdge';
+
+// // Function to perform topological sorting and return a map with indices
+// const topologicalSortWithIndex = (graph) => {
+//   const visited = new Set();
+//   const stack = [];
+//   const indexMap = new Map();
+  
+//   const visit = (node) => {
+//     if (visited.has(node)) return;
+//     visited.add(node);
+//     if (graph[node]) {
+//       Object.keys(graph[node]).forEach((neighbor) => visit(neighbor));
+//     }
+//     stack.push(node);
+//   };
+
+//   Object.keys(graph).forEach(visit);
+//   const sortedNodes = stack.reverse();
+  
+//   // Build the index map
+//   sortedNodes.forEach((node, index) => {
+//     indexMap.set(node, index);
+//   });
+
+//   return indexMap;
+// };
+
+// const edgeTypes = {
+//   custom: CustomEdge,
+// };
+
+// const ViewTree = () => {
+//   const [nodes, setNodes] = useState([]);
+//   const [edges, setEdges] = useState([]);
+//   const reactFlowWrapper = useRef(null);
+
+//   useEffect(() => {
+//     const fetchData = async () => {
+//       try {
+//         const response = await axios.get('http://localhost:8080/api/graph-data');
+//         const data = response.data;
+//         processGraphData(data);
+//       } catch (error) {
+//         console.error('Error fetching data:', error);
+//       }
+//     };
+
+//     fetchData();
+//   }, []);
+
+//   const processGraphData = (data) => {
+//     const newNodes = [];
+//     const newEdges = [];
+//     const indexMap = topologicalSortWithIndex(data);
+//     const positions = {};
+//     let yOffset = 0;
+
+//     // Function to calculate position based on index
+//     const calculatePosition = (node) => {
+//       if (!positions[node]) {
+//         positions[node] = { x: 250, y: yOffset + indexMap.get(node) * 100 };
+//       }
+//       return positions[node];
+//     };
+
+//     // Function to determine the edge color based on the key value
+//     const getEdgeColor = (key) => {
+//       switch (key) {
+//         case 0:
+//           return 'gray';
+//         case 1:
+//           return 'green';
+//         case 2:
+//           return 'yellow';
+//         case 3:
+//           return 'orange';
+//         default:
+//           return 'black';
+//       }
+//     };
+
+//     Object.keys(data).forEach((source) => {
+//       if (!newNodes.find((node) => node.id === source)) {
+//         newNodes.push({ id: source, data: { label: source }, position: calculatePosition(source) });
+//       }
+//       if (data[source]) {
+//         Object.keys(data[source]).forEach((target) => {
+//           if (!newNodes.find((node) => node.id === target)) {
+//             newNodes.push({ id: target, data: { label: target }, position: calculatePosition(target) });
+//           }
+//           const { key, value } = data[source][target];
+//           newEdges.push({
+//             id: `e${source}-${target}`,
+//             source,
+//             target,
+//             type: 'custom',
+//             data: { label: value },
+//             style: { stroke: getEdgeColor(key) },
+//             markerEnd: {
+//               type: 'arrowclosed',
+//             },
+//           });
+//         });
+//       }
+//     });
+
+//     setNodes(newNodes);
+//     setEdges(newEdges);
+//   };
+
+//   return (
+//     <div style={{ height: '100vh' }} ref={reactFlowWrapper}>
+//       <ReactFlowProvider>
+//         <ReactFlow nodes={nodes} edges={edges} edgeTypes={edgeTypes} fitView>
+//           <MiniMap />
+//           <Controls />
+//           <Background />
+//         </ReactFlow>
+//       </ReactFlowProvider>
+//     </div>
+//   );
+// };
+
+// export default ViewTree;

@@ -47,23 +47,23 @@ const ConditionList = () => {
     console.log(rows);
     if (validateRows()) {
       const workflow = {
-        name: "workflow1", // Change this to a dynamic value if needed
+        name: "test this workflow", // Change this to a dynamic value if needed
         steps: rows.map((row) => ({
-          action: row.action,
-          condition: row.condition,
-          activity: row.activity,
+          action: {name: row.Action},
+          condition: {conditionText: row.Condition},
+          activity: {name: row.Activity},
         })),
       };
-
+      console.log(workflow);
       try {
         const response = await axios.post(
           "http://localhost:8080/workflows",
           workflow
         );
+        console.log(response);
         setSaveMessage("Workflow saved successfully!");
-        setError("");
       } catch (error) {
-        setError("Error saving workflow. Please try again.");
+        setError("Error saving workflow. Please try again.", error);
       }
     } else {
       setError("Please fill in all fields correctly before saving.");
