@@ -1,4 +1,4 @@
-// src/components/ConditionRow.jsx
+
 import React, { useState, useEffect } from "react";
 import "./ConditionRow.css";
 
@@ -18,7 +18,8 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
     } else if (firstDropdown === "Gender") {
       return ["male", "female"].includes(textBoxValue.toLowerCase());
     } else if (firstDropdown === "Pincode") {
-      return /^\d{6}$/.test(textBoxValue);
+      // Allow pincode to be exactly 6 digits or start with 2 digits followed by more digits, with total length >= 6
+      return /^\d{2}\d*$/.test(textBoxValue) || /^\d{6}$/.test(textBoxValue);
     }
     return true;
   };
@@ -36,7 +37,7 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
   const getPlaceholder = () => {
     if (firstDropdown === "Age") return "lesser/greater than age";
     if (firstDropdown === "Gender") return "male or female";
-    if (firstDropdown === "Pincode") return "6-digit PIN code";
+    if (firstDropdown === "Pincode") return "6-digit PIN code or Start with XX";
     return "";
   };
 
@@ -75,3 +76,4 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
 };
 
 export default ConditionRow;
+
