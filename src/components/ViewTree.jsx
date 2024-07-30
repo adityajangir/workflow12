@@ -9,16 +9,25 @@ const ViewTree = () => {
   const reactFlowWrapper = useRef(null);
   const location = useLocation();
 
+  const removeEmptyKey = (obj) => {
+    Object.keys(obj).forEach(key => {
+      if (key === '') {
+        delete obj[key];
+      }
+    });
+    return obj;
+  };
+
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const dataParam = queryParams.get('data');
     if (dataParam) {
       try {
-        // Decode and parse the graph data
+        // Decoding and parsing the graph data
         const graphData = JSON.parse(decodeURIComponent(dataParam));
-        const newresp = updateSubtreeValues(graphData);
-        console.log(newresp.data);
-        processGraphData(newresp.data);
+        const newgraphData = removeEmptyKey(graphData.data);
+        console.log(newgraphData)
+        processGraphData(newgraphData);
       } catch (error) {
         console.error('Error parsing graph data:', error);
       }
@@ -44,7 +53,7 @@ const ViewTree = () => {
     Object.keys(graph).forEach(visit);
     const sortedNodes = stack.reverse();
     
-    // Build the index map
+    // Building the index map
     sortedNodes.forEach((node, index) => {
       indexMap.set(node, index);
     });
@@ -53,128 +62,83 @@ const ViewTree = () => {
   };
 
 
-  const updateSubtreeValues = (graph) => {
-    const result = JSON.parse(JSON.stringify(graph)); // Deep copy to avoid mutating the original graph
+
+
+
+  // const updateSubtreeValue = (graph, nodex) => {
+  //   const result = JSON.parse(JSON.stringify(graph));
   
-    const updateSubtree = (node) => {
-      if (!result[node]) return;
+  //   const updateSubtreeRecursive = (node, value) => {
+  //     console.log(node, value);
       
-      // If the node has a number value of 0, update its subtree
+  //     Object.keys(result[node]).forEach((target) => {
+  //         if (value == 0 || result[node][target].key == 0) {
+  //           result[node][target].key = 0;
+  //           updateSubtreeRecursive(target, 0);
+  //         } else {
+  //           updateSubtreeRecursive(target, result[node][target].key);
+  //         }
+  //     });
+  //   };
+  
+  //   updateSubtreeRecursive(nodex, 1);
+  //   console.log(result);
+  //   return result;
+  // };
+
+  const updateSubtreeValue = (graph, nodex) => {
+    const result = JSON.parse(JSON.stringify(graph));
+  
+    const updateSubtreeRecursive = (node, value) => {
+      // Ensure the node exists in the result object
+      if (!result[node]) {
+        return;
+      }
+      
+      // Iterate over the keys of the current node
       Object.keys(result[node]).forEach((target) => {
-        const { key } = result[node][target];
-        if (key === 0) {
-          // Update the current node and all nodes in the subtree
-          updateSubtreeRecursive(target);
+        // Ensure the target exists and has a key
+        if (value == 0 || result[node][target].key == 0) {
+          result[node][target].key = 0;
+          updateSubtreeRecursive(target, 0);
+        } else {
+          updateSubtreeRecursive(target, result[node][target].key);
         }
       });
     };
   
-    const updateSubtreeRecursive = (node) => {
-      if (!result[node]) return;
-      // Set the number value of the current node to 0
-      Object.keys(result[node]).forEach((target) => {
-        result[node][target].key = 0;
-        updateSubtreeRecursive(target);
-      });
-    };
-  
-    Object.keys(result).forEach(updateSubtree);
+    updateSubtreeRecursive(nodex, 1);
+    console.log(result);
     return result;
   };
   
 
-  // useEffect(() => {
-  //   const fetchData = async () => {
-  //     try {
-      //   const response = {
-      //     "GenderCheck": {
-      //         "PincodeCheck": {
-      //             "key": 0,
-      //             "value": "Male"
-      //         },
-      //         "LoanStatus": {
-      //             "key": 2,
-      //             "value": "Female"
-      //         }
-      //     },
-      //     "PincodeCheck": {
-      //         "LoanStatus": {
-      //             "key": 3,
-      //             "value": "Starts with 40"
-      //         }
-      //     },
-      //     "DobCheck": {
-      //         "GenderCheck": {
-      //             "key": 0,
-      //             "value": "age>25"
-      //         }
-      //     }
-      // };
-  //     const response = {
-  //       a: {
-  //         b: {
-  //           key: 1,
-  //           value: "B",
-  //         },
-  //         c: {
-  //           key: 1,
-  //           value: "C",
-  //         },
-  //       },
-  //       b: {
-  //         d: {
-  //           key: 0,
-  //           value: "D",
-  //         },
-  //         e: {
-  //           key: 0,
-  //           value: "E",
-  //         },
-  //       },
-  //       c: {
-  //         f: {
-  //           key: 0,
-  //           value: "F",
-  //         },
-  //         g: {
-  //           key: 1,
-  //           value: "G",
-  //         },
-  //       },
-  //       g: {
-  //         h: {
-  //           key: 2,
-  //           value: "H",
-  //         },
-  //         i: {
-  //           key: 0,
-  //           value: "I",
-  //         },
-  //       },
-  //       i: {
-  //         e: {
-  //           key: 3,
-  //           value: "random"
-  //         }
-  //       }
-  //     };
 
-      
-  //     } catch (error) {
-  //       console.error('Error fetching data:', error);
-  //     }
-  //   };
 
-  //   fetchData();
-  // }, []);
 
   let ypos = 0, xpos = 1000, xchange = 50, flag = 1;
 
-  const processGraphData = (data) => {
+  function findFirstOccurrence(map, value) {
+    let foundKey = undefined;
+  
+    map.forEach((val, key) => {
+      if (foundKey === undefined && val === value) {
+        foundKey = key;
+      }
+    });
+  
+    return foundKey;
+  }
+
+  const processGraphData = (data1) => {
     const newNodes = [];
     const newEdges = [];
     const positions = {};
-    const indexMap = topologicalSortWithIndex(data);
+    const indexMap = topologicalSortWithIndex(data1);
+    const firstoccactivity = findFirstOccurrence(indexMap, 0);
+    console.log(firstoccactivity)
+    const data = updateSubtreeValue(data1, firstoccactivity);
+    console.log(data);
     console.log(indexMap);
 
     // Function to calculate position
@@ -209,27 +173,32 @@ const ViewTree = () => {
     };
 
     Object.keys(data).forEach((source) => {
-      if (!newNodes.find((node) => node.id === source)) {
-        newNodes.push({ id: source, data: { label: source }, position: calculatePosition(source) });
-      }
-      Object.keys(data[source]).forEach((target) => {
-        if (!newNodes.find((node) => node.id === target)) {
-          newNodes.push({ id: target, data: { label: target }, position: calculatePosition(target) });
+      if(source != ""){
+        if (!newNodes.find((node) => node.id === source)) {
+          newNodes.push({ id: source, data: { label: source }, position: calculatePosition(source) });
         }
-        const { key, value } = data[source][target];
-        console.log(key);
-        newEdges.push({
-          id: `e${source}-${target}`,
-          source,
-          target,
-          type: CustomEdge,
-          label: value,
-          markerEnd: {
-            type: 'arrow',
-          },
-          style: { stroke: getEdgeColor(key) }, // Coloring based on key
+        Object.keys(data[source]).forEach((target) => {
+          if(target!=""){
+            if (!newNodes.find((node) => node.id === target)) {
+              newNodes.push({ id: target, data: { label: target }, position: calculatePosition(target) });
+            }
+            const { key, value } = data[source][target];
+            console.log(key);
+            newEdges.push({
+              id: `e${source}-${target}`,
+              source,
+              target,
+              type: CustomEdge,
+              label: value,
+              markerEnd: {
+                type: 'arrow',
+              },
+              style: { stroke: getEdgeColor(key) }, // Coloring based on key
+            });
+          }
         });
-      });
+
+      }
     });
 
     setNodes(newNodes);
@@ -251,132 +220,3 @@ export default ViewTree;
 
 
 
-
-// import React, { useEffect, useState, useRef } from 'react';
-// import ReactFlow, { MiniMap, Controls, Background, ReactFlowProvider } from 'react-flow-renderer';
-// import axios from 'axios';
-// import CustomEdge from './CustomEdge';
-
-// // Function to perform topological sorting and return a map with indices
-// const topologicalSortWithIndex = (graph) => {
-//   const visited = new Set();
-//   const stack = [];
-//   const indexMap = new Map();
-  
-//   const visit = (node) => {
-//     if (visited.has(node)) return;
-//     visited.add(node);
-//     if (graph[node]) {
-//       Object.keys(graph[node]).forEach((neighbor) => visit(neighbor));
-//     }
-//     stack.push(node);
-//   };
-
-//   Object.keys(graph).forEach(visit);
-//   const sortedNodes = stack.reverse();
-  
-//   // Build the index map
-//   sortedNodes.forEach((node, index) => {
-//     indexMap.set(node, index);
-//   });
-
-//   return indexMap;
-// };
-
-// const edgeTypes = {
-//   custom: CustomEdge,
-// };
-
-// const ViewTree = () => {
-//   const [nodes, setNodes] = useState([]);
-//   const [edges, setEdges] = useState([]);
-//   const reactFlowWrapper = useRef(null);
-
-//   useEffect(() => {
-//     const fetchData = async () => {
-//       try {
-//         const response = await axios.get('http://localhost:8080/api/graph-data');
-//         const data = response.data;
-//         processGraphData(data);
-//       } catch (error) {
-//         console.error('Error fetching data:', error);
-//       }
-//     };
-
-//     fetchData();
-//   }, []);
-
-//   const processGraphData = (data) => {
-//     const newNodes = [];
-//     const newEdges = [];
-//     const indexMap = topologicalSortWithIndex(data);
-//     const positions = {};
-//     let yOffset = 0;
-
-//     // Function to calculate position based on index
-//     const calculatePosition = (node) => {
-//       if (!positions[node]) {
-//         positions[node] = { x: 250, y: yOffset + indexMap.get(node) * 100 };
-//       }
-//       return positions[node];
-//     };
-
-//     // Function to determine the edge color based on the key value
-//     const getEdgeColor = (key) => {
-//       switch (key) {
-//         case 0:
-//           return 'gray';
-//         case 1:
-//           return 'green';
-//         case 2:
-//           return 'yellow';
-//         case 3:
-//           return 'orange';
-//         default:
-//           return 'black';
-//       }
-//     };
-
-//     Object.keys(data).forEach((source) => {
-//       if (!newNodes.find((node) => node.id === source)) {
-//         newNodes.push({ id: source, data: { label: source }, position: calculatePosition(source) });
-//       }
-//       if (data[source]) {
-//         Object.keys(data[source]).forEach((target) => {
-//           if (!newNodes.find((node) => node.id === target)) {
-//             newNodes.push({ id: target, data: { label: target }, position: calculatePosition(target) });
-//           }
-//           const { key, value } = data[source][target];
-//           newEdges.push({
-//             id: `e${source}-${target}`,
-//             source,
-//             target,
-//             type: 'custom',
-//             data: { label: value },
-//             style: { stroke: getEdgeColor(key) },
-//             markerEnd: {
-//               type: 'arrowclosed',
-//             },
-//           });
-//         });
-//       }
-//     });
-
-//     setNodes(newNodes);
-//     setEdges(newEdges);
-//   };
-
-//   return (
-//     <div style={{ height: '100vh' }} ref={reactFlowWrapper}>
-//       <ReactFlowProvider>
-//         <ReactFlow nodes={nodes} edges={edges} edgeTypes={edgeTypes} fitView>
-//           <MiniMap />
-//           <Controls />
-//           <Background />
-//         </ReactFlow>
-//       </ReactFlowProvider>
-//     </div>
-//   );
-// };
-
-// export default ViewTree;

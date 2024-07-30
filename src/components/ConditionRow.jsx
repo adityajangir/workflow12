@@ -14,7 +14,8 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
     if (firstDropdown === "Name") {
       return /^[A-Za-z]+$/.test(textBoxValue);
     } else if (firstDropdown === "AgeCheck") {
-      return /^(lesser|greater) than \d+$/.test(textBoxValue);
+      // return true;
+      return /^age[<>]\d+(\s+or\s+age[<>]\d+)?$/.test(textBoxValue);      // change  age>25, age<30
     } else if (firstDropdown === "GenderCheck") {
       return ["male", "female"].includes(textBoxValue.toLowerCase());
     } else if (firstDropdown === "PincodeCheck") {
@@ -35,7 +36,7 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
   }, [firstDropdown, textBoxValue, secondDropdown, index]);
 
   const getPlaceholder = () => {
-    if (firstDropdown === "AgeCheck") return "lesser/greater than age";
+    if (firstDropdown === "AgeCheck") return "age>30 or age<45";
     if (firstDropdown === "GenderCheck") return "male or female";
     if (firstDropdown === "PincodeCheck") return "6-digit PIN code or Start with XX";
     return "";

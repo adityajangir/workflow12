@@ -18,6 +18,7 @@ const ConditionList = () => {
   };
 
   const handleConditionChange = (index, condition) => {
+    console.log(index, condition);
     setRows((prevRows) => {
       const updatedRows = [...prevRows];
       updatedRows[index] = condition;
@@ -44,10 +45,10 @@ const ConditionList = () => {
   };
 
   const handleSaveClick = async () => {
-    console.log(rows);
     if (validateRows()) {
+      const randomstring = (Math.random() + 1).toString(36).substring(7);
       const workflow = {
-        name: "test this workflow", // Change this to a dynamic value if needed
+        name: "test this workflow "+ randomstring, 
         steps: rows.map((row) => ({
           action: {name: row.Action},
           condition: {conditionText: row.Condition},
