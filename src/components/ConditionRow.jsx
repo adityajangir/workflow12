@@ -20,7 +20,7 @@ const ConditionRow = ({ index, onConditionChange, prefill }) => {
       return ["male", "female"].includes(textBoxValue.toLowerCase());
     } else if (firstDropdown === "PincodeCheck") {
       // Allow pincode to be exactly 6 digits or start with 2 digits followed by more digits, with total length >= 6
-      return /^\d{2}\d*$/.test(textBoxValue) || /^\d{6}$/.test(textBoxValue);
+      // return /^\d{2}\d*$/.test(textBoxValue) || /^\d{6}$/.test(textBoxValue);
     }
     return true;
   };
